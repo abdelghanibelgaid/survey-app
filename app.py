@@ -6,17 +6,20 @@ from io import BytesIO
 # === PAGE DE CONNEXION ===
 st.set_page_config(page_title="Plateforme de Questionnaires", layout="wide")
 
+VALID_CREDENTIALS = {"user@example.com": "password123"}  # Replace with real credentials
+
 def login():
     st.title("🔒 Authentification")
     email = st.text_input("Adresse e-mail")
     password = st.text_input("Mot de passe", type="password")
+    
     if st.button("Se connecter"):
-        if email and password:
+        if email in VALID_CREDENTIALS and VALID_CREDENTIALS[email] == password:
             st.session_state["authenticated"] = True
             st.session_state["email"] = email
             st.experimental_rerun()
         else:
-            st.warning("Veuillez entrer une adresse e-mail et un mot de passe.")
+            st.error("❌ Email ou mot de passe incorrect.")
 
 if "authenticated" not in st.session_state:
     login()
