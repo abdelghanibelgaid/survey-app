@@ -41,8 +41,7 @@ if selected_survey:
     st.sidebar.write(f"📄 {questionnaires[selected_survey]}")
 
 # === FORMULAIRE DE QUESTIONNAIRE ===
-st.title(f"📝 Enquête {selected_survey}")
-st.write(f"**Description :** {questionnaires[selected_survey]}")
+st.title("📝 Enquête")
 
 with st.form("survey_form"):
     st.subheader("Informations de base")
@@ -56,29 +55,26 @@ with st.form("survey_form"):
     st.subheader("📝 Questions ouvertes (6-10)")
     responses_text = {f"Question {i}": st.text_area(f"Question {i}") for i in range(6, 11)}
 
-    st.subheader("📈 Saisie des indicateurs")
-    cols = [f"TI {i}" for i in range(1, 31)]
-    rows = [f"Indicateur {i}" for i in range(1, 31)]
-    data_table = pd.DataFrame("", index=rows, columns=cols)
-    data_table = st.data_editor(data_table, height=400)
-
     submitted = st.form_submit_button("✅ Soumettre")
 
-    if submitted:
-        if not organisation or not nom_complet:
-            st.error("Veuillez remplir tous les champs obligatoires.")
-        else:
-            st.success("✅ Merci pour votre participation !")
-            
-            # Enregistrement des données
-            now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            filename = f"Enquete_{selected_survey}_{now}.xlsx"
-            
-            with BytesIO() as output:
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    pd.DataFrame({"Organisation": [organisation], "Nom": [nom_complet], "Année": [annee]}).to_excel(writer, sheet_name="Infos", index=False)
-                    pd.DataFrame.from_dict(responses_num, orient="index").to_excel(writer, sheet_name="Réponses Quantitatives", header=["Valeur"])
-                    pd.DataFrame.from_dict(responses_text, orient="index").to_excel(writer, sheet_name="Réponses Qualitatives", header=["Réponse"])
-                    data_table.to_excel(writer, sheet_name="Données Indicateurs")
-                output.seek(0)
-                st.download_button("📥 Télécharger les résultats", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+if submitted:
+    if not organisation or not nom_complet:
+        st.error("❌ Veuillez remplir tous les champs obligatoires.")
+    else:
+        st.success("✅ Merci pour votre participation !")
+        
+        # Génération du fichier Excel
+        now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"Enquete_{now}.xlsx"
+        
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            # Enregistrer les données dans des feuilles Excel
+            pd.DataFrame({"Organisation": [organisation], "Nom": [nom_complet], "Année": [annee]}).to_excel(writer, sheet_name="Infos", index=False)
+            pd.DataFrame.from_dict(responses_num, orient="index").to_excel(writer, sheet_name="Réponses Numériques", header=["Valeur"])
+            pd.DataFrame.from_dict(responses_text, orient="index").to_excel(writer, sheet_name="Réponses Textuelles", header=["Réponse"])
+        
+        output.seek(0)  # ✅ Assurez-vous que le pointeur du fichier est bien au début
+
+        # ✅ Ajout de 'wb' pour garantir la compatibilité avec streamlit
+        st.download_button("📥 Télécharger les résultats", data=output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
