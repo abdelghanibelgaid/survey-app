@@ -17,7 +17,7 @@ def login():
         if email in VALID_CREDENTIALS and VALID_CREDENTIALS[email] == password:
             st.session_state["authenticated"] = True
             st.session_state["email"] = email
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("❌ Email ou mot de passe incorrect.")
 
